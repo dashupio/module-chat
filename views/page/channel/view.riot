@@ -1,16 +1,9 @@
 <page-channel-view>
   <div>
-    <a href="#!" class="d-block alert alert-info mb-3" if={ !props.page.get('data.model') } onclick={ (e) => props.onConfig(e) }>
-      <i class="fa fa-exclamation-triangle mr-2" />
-      Please select at least one <b>model</b> for the messages.
-    </a>
-
     <div if={ loading('channel') } class="text-center my-5 py-5">
       <i class="fa fa-spin fa-spinner h1" />
     </div>
-    <div if={ !loading('channel') && props.page.get('data.form') } class="dashup-grid">
-      SUP
-    </div>
+    <dashup-view if={ !loading('channel') } view="chat" type="page" { ...getProps() } />
   </div>
 
   <script>

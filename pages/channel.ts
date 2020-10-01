@@ -45,6 +45,8 @@ export default class ChannelPage extends Struct {
   get views() {
     // return object of views
     return {
+      chat : 'chat',
+      
       view   : 'page/channel/view',
       menu   : 'page/channel/menu',
       config : 'page/channel/config',

@@ -1,0 +1,84 @@
+<chat>
+  <div class="d-flex flex-column flex-1">
+    <div class="chat-body flex-1">
+      <chat-thread id={ props.page.get('_id') } />
+    </div>
+
+    <chat-create if={ props.dashup.can(props.page, 'submit') } scroll-down={ (e) => onScroll(e) } />
+  </div>
+
+  <script>
+    // require base class
+    import PerfectScrollbar from 'perfect-scrollbar';
+
+    // import chat create
+    import chatCreate from './chat/create';
+    import chatThread from './chat/thread';
+
+    // export default
+    export default class Chat {
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * components
+       */
+      static get components() {
+        // return components
+        return {
+          chatCreate,
+          chatThread,
+        };
+      }
+
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onMounted(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // set ps
+        if (!this.$('.chat-thread.ps') && this.$('.chat-thread')) {
+          // perfect scrollbar
+          this.ps = new PerfectScrollbar(this.$('.chat-thread'), {
+            suppressScrollX : true,
+          });
+        }
+      }
+
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onUpdated(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // set ps
+        if (!this.$('.chat-thread.ps') && this.$('.chat-thread')) {
+          // perfect scrollbar
+          this.ps = new PerfectScrollbar(this.$('.chat-thread'), {
+            suppressScrollX : true,
+          });
+        }
+      }
+
+      /**
+       * on scroll
+       */
+      onScroll() {
+        // set scrolltop
+        this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
+      }
+    }
+  </script>
+</chat>

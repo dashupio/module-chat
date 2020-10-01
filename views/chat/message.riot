@@ -1,0 +1,169 @@
+<chat-message>
+  <div class={ classes({ 'message' : true, 'in-thread' : inThread() }) }>
+    <div class="message-avatar">
+      <img if={ get('message.by.avatar') } src={ get('message.by.avatar') } class="rounded-circle img-fluid" />
+    </div>
+    <div class="message-body">
+      <div class="message-by">
+        <b class="mr-1" if={ get('message.by.name') }>
+          { get('message.by.name') }
+        </b>
+        <small class="text-muted">
+          { getDate(get('message.created_at')) }
+        </small>
+      </div>
+      <div class="message-content">
+        <raw data={ { html : renderText(get('message.parsed') || get('message.message')) } } />
+      </div>
+      <div if={ get('message.embeds.0') } class="mb-2 message-embeds">
+        <div each={ (embed, i) in get('message.embeds') } class="mt-2 card">
+          <div class="card-body">
+            <chat-embed in-message={ true } embed={ { data : embed } } class="embed-child" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // require base class
+    import uuid from 'uuid';
+    import moment from 'moment';
+
+    // export default
+    export default class ChatEmbed {
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * in thread
+       */
+      inThread() {
+        // return in thread
+        return this.get('message.by.id') === this.get('prev.by.id');
+      }
+      
+      /**
+      * get date
+      *
+      * @param  {Date} created_at
+      *
+      * @return {String}
+      */
+      getDate(date) {
+        // from now
+        return moment(date).fromNow(true);
+      }
+
+      /**
+      * parse tags out of message text
+      *
+      * @param  {String} text
+      *
+      * @return {Array}
+      */
+      renderText(text) {
+        // add placeholders
+        const tags = ((text || '').match(/<(\w+):(.*?)\|(\w+)>/g) || []).map((val) => {
+          // replace tag
+          const tag = val.replace('<', '').replace('>', '');
+
+          // return tag
+          const parsed = {
+            id    : tag.split('|')[1].trim(),
+            type  : tag.split(':')[0].trim(),
+            text  : val,
+            uuid  : uuid(),
+            page  : tag.split(':')[0].trim() === 'page' ? props.dashup.page(tag.split('|')[1].trim()) : null,
+            title : tag.split(':')[1].split('|')[0].trim(),
+          };
+
+          // return tag
+          return parsed;
+        });
+
+        // colors
+        const colors = {
+          user : 'primary',
+        };
+
+        // loop tags
+        tags.forEach((tag) => {
+          // check user
+          if (tag.type === 'user') {
+            // join tags
+            text = text.split(tag.text).join(`<span class="badge badge-${colors[tag.type]} badge-tag"><i class="fa fa-at"></i><span class="content">${tag.title}</span></span>`);
+          }
+          if (tag.type === 'page' && tag.page) {
+            // get parent
+            const parent = tag.page.get('parent') && props.dashup.page(tag.page.get('parent'));
+
+            // join tags
+            text = text.split(tag.text).join(`<a href="/app/${tag.page.get('_id')}" class="badge badge-${tag.page.get('color') || (parent && parent.get('color')) || 'secondary'} badge-tag"><i class="fa-${tag.page.get('icon') || 'pencil fa'}"></i><span class="content">${tag.page.get('name')}</span></a>`);
+          }
+        });
+
+        // return text
+        return text;
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // MISC METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * ref
+       */
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
+        };
+      }
+
+      /**
+       * ref
+       */
+      get(key) {
+        // get
+        return dotProp.get({ ...this.props, ...this.state }, key);
+      }
+
+      /**
+       * classes
+       */
+      classes(obj) {
+        // return object
+        return Object.keys(obj).filter((k) => obj[k]).join(' ');
+      }
+
+      /**
+       * set loading
+       */
+      loading(type, way) {
+        // set loading
+        if (!this.__loading) this.__loading = new Map();
+
+        // check loading
+        if (!type) return !!Array.from(this.__loading.values()).find((v) => v);
+        if (typeof way === 'undefined') return !!this.__loading.get(type);
+
+        // set loading
+        this.__loading.set(type, way);
+        this.update();
+      }
+    }
+  </script>
+</chat-message>

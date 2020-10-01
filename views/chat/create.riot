@@ -1,0 +1,365 @@
+<chat-create>
+  <div class="flex-0">
+    <div if={ embeds.length } class="chat-embeds mb-3">
+      <div each={ (embed, i) in embeds } class="card card-embed">
+        <div class="card-body">
+          <chat-embed on-remove={ (e) => onRemove(getEmbed(embed)) } embed={ getEmbed(embed) } class="embed-child" />
+        </div>
+      </div>
+    </div>
+    <div class={ classes({ 'chat-group' : true, 'chat-group-posting' : state.posting, 'border border-danger' : state.long }) }>
+      <div class="chat-input-wrap">
+        <div class="flex-1 flex-column">
+          <div ref="input" contenteditable class="chat-control" onkeyup={ (e) => onKeyup(e) } onkeydown={ (e) => onKeydown(e) } />
+        </div>
+        <div class="chat-upload">
+          <button class={ `btn btn-${props.size || 'lg'}` } onclick={ (e) => onSend(e) }>
+            <i class="fa fa-plus" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // require base class
+    import getUrls from 'get-urls';
+    import PerfectScrollbar from 'perfect-scrollbar';
+
+    // chat embed
+    import chatEmbed from './embed';
+
+    // export default
+    export default class ChatCreate {
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * components
+       */
+      static get components() {
+        // return components
+        return {
+          chatEmbed,
+        };
+      }
+
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        // set posting
+        this.embed      = new Map();
+        this.embeds     = [];
+        this.images     = [];
+        this.__loaded   = [];
+        this.slideIndex = 0;
+        this.showEmbeds = null;
+
+        // bind methods
+        this.onKeyup   = this.onKeyup.bind(this);
+        this.getEmbed  = this.getEmbed.bind(this);
+        this.onKeydown = this.onKeydown.bind(this);
+      }
+
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onMounted(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // attach to this
+        if (this.$('.chat-control') && !this.$('.tributed') && !$('.tribute-container').is(':visible')) {
+          // add class
+          $(this.$('.chat-control')).addClass('tributed');
+
+          // attach again
+          eden.chat.tribute().attach($('.chat-control', this.root)[0]);
+        }
+
+        // set ps
+        if (!this.$('.ps.chat-control') && this.$('.chat-control')) {
+          // new perfect
+          this.ps = new PerfectScrollbar(this.$('.chat-control'));
+        }
+      }
+
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onUpdated(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // set ps
+        if (!this.$('.ps.chat-embeds') && this.$('.chat-embeds')) {
+          // perfect scrollbar
+          this.ps2 = new PerfectScrollbar(this.$('.chat-embeds'));
+        }
+
+        // attach to this
+        if (this.$('.chat-control') && !this.$('.tributed') && !$('.tribute-container').is(':visible')) {
+          // add class
+          $(this.$('.chat-control')).addClass('tributed');
+
+          // attach again
+          eden.chat.tribute().attach($('.chat-control', this.root)[0]);
+        }
+
+        // set ps
+        if (!this.$('.ps.chat-control') && this.$('.chat-control')) {
+          // new perfect
+          this.ps = new PerfectScrollbar(this.$('.chat-control'));
+        }
+      }
+
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onBeforeUnmount(...args) {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // attach to this
+        if (this.$('.chat-control')) eden.chat.tribute().detach(this.$('.chat-control'));
+      }
+
+      /**
+       * on comment
+       *
+       * @param  {Event} e
+       */
+      onKeydown(e) {
+        // check if active
+        if (this.state.posting) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        // check key code
+        if (e.keyCode !== 13 || e.shiftKey) return;
+
+        // check if is visible
+        if ($('.tribute-container').is(':visible')) return;
+
+        // do on comment
+        return this.onSend(e);
+      }
+
+      /**
+       * on comment
+       *
+       * @param  {Event} e
+       */
+      onKeyup(e) {
+        // set height
+        if ((e.target.innerText || '').length >= 2560) {
+          // 512 characters max
+          e.preventDefault();
+          e.stopPropagation();
+
+          // set too long
+          if (this.state.long !== true) this.update({
+            long : true,
+          });
+        } else {
+          // set not too long
+          if (this.state.long !== false) this.update({
+            long : false,
+          });
+        }
+
+        // get entries
+        const entries = Array.from(getUrls(e.target.innerText).values()).filter((entry) => {
+          // split entry
+          const before = e.target.innerText.split(entry.split('//')[1])[0];
+
+          // return false
+          if (before.split('').pop() === '@') return false;
+
+          // return true
+          return true;
+        });
+
+        // loop entries
+        entries.forEach((entry) => {
+          // get embeds
+          if (!this.embed.has(entry)) {
+            // set entry
+            this.embed.set(entry, {
+              url     : entry,
+              data    : {},
+              loading : this.loadEmbed(entry),
+            });
+          }
+        });
+
+        // create embed array
+        this.embeds = [...this.images, ...(entries.filter((entry) => {
+          // remove disabled
+          return !this.embed.get(entry).disabled;
+        }))];
+
+        // update view
+        this.update();
+
+        // set scrolltop
+        this.props.scrollDown();
+      }
+
+      /**
+       * on comment
+       *
+       * @param  {Event} e
+       */
+      async onSend(e) {
+        // prevent default
+        e.preventDefault();
+        e.stopPropagation();
+
+        // validate
+        if (this.state.posting || this.state.long) return;
+
+        // update
+        this.update({
+          posting : true,
+        });
+
+        // await fetch
+        const result = await eden.router.post(this.props.url, {
+          embeds  : this.embeds,
+          message : this.$('.chat-control').innerText,
+        });
+
+        // check if success
+        if (result.success) {
+          // reset
+          this.images = [];
+          this.embeds = [];
+          this.__loaded = [];
+
+          // clear field
+          this.$('.chat-control').innerHTML = '';
+        } else {
+          // alert error message
+          eden.alert.error(result.message);
+        }
+
+        // update
+        this.update({
+          posting : false,
+        });
+
+        // focus on field
+        $(this.$('.chat-control')).focus();
+      }
+
+      /**
+       * loads embed
+       *
+       * @param  {String}  url
+       *
+       * @return {Promise}
+       */
+      async loadEmbed (url) {
+        // await fetch
+        const data = await eden.router.get(`/app/${props.dashup.get('_id')}/chat/embed?url=${encodeURIComponent(url)}`);
+
+        // remove from embeds if fail
+        if (!data.success) {
+          // disable embed
+          this.embed.get(url).disabled = true;
+
+          // filter out
+          this.embeds = this.embeds.filter((embed) => embed !== url);
+
+          // return update
+          return this.update();
+        }
+
+        // set data
+        this.embed.get(url).data = data.result;
+        this.embed.get(url).loading = false;
+
+        // update
+        this.update();
+
+        // set scrolltop
+        this.props.scrollDown();
+      }
+
+      /**
+       * return get embed
+       */
+      getEmbed(embed) {
+        // return get embed
+        return this.embed.get(embed);
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // MISC METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * ref
+       */
+      ref(name) {
+        // set refs
+        if (!this.refs) this.refs = {};
+
+        // return ref function
+        return (that) => {
+          // set ref
+          this.refs[name] = that;
+        };
+      }
+
+      /**
+       * ref
+       */
+      get(key) {
+        // get
+        return dotProp.get({ ...this.props, ...this.state }, key);
+      }
+
+      /**
+       * classes
+       */
+      classes(obj) {
+        // return object
+        return Object.keys(obj).filter((k) => obj[k]).join(' ');
+      }
+
+      /**
+       * set loading
+       */
+      loading(type, way) {
+        // set loading
+        if (!this.__loading) this.__loading = new Map();
+
+        // check loading
+        if (!type) return !!Array.from(this.__loading.values()).find((v) => v);
+        if (typeof way === 'undefined') return !!this.__loading.get(type);
+
+        // set loading
+        this.__loading.set(type, way);
+        this.update();
+      }
+    }
+  </script>
+</chat-create>

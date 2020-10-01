@@ -1,15 +1,5 @@
 <page-channel-config>
-  <div>
-    <div class="mb-3">
-      <label class="form-label">
-        Message Model
-      </label>
-      <eden-select on-change={ (e, val) => onModel(val) } ref={ ref('model') } placeholder="Select Model" data={ getModel() } />
-      <small>
-        The model this page should display.
-      </small>
-    </div>
-  </div>
+  <div></div>
 
   <script>
     // export default
@@ -37,59 +27,12 @@
       //
       // ////////////////////////////////////////////////////////////////////////////
 
-      /**
-       * on model
-       */
-      async onModel(val) {
-        // get value
-        if (!val) val = this.refs.model.val();
-
-        // model
-        if (!val || !val.length) return;
-
-        // get module
-        const mod = this.props.dashup.page(val);
-
-        // loading model
-        this.loading('model', true);
-
-        // set again
-        if (mod.get('_id') !== this.props.page.get('data.model')) {
-          // set form again
-          await this.props.data('form', null);
-        }
-        
-        // set model
-        await this.props.data('model', mod.get('_id'));
-
-        // loading model
-        this.loading('model', false);
-      }
-
 
       // ////////////////////////////////////////////////////////////////////////////
       //
       // GET METHODS
       //
       // ////////////////////////////////////////////////////////////////////////////
-
-      /**
-       * get value
-       */
-      getModel() {
-        // return value
-        return Array.from(this.props.dashup.get('pages').values()).filter((page) => {
-          // return model pages
-          return page.get('type') === 'model';
-        }).map((page) => {
-          // return type
-          return {
-            name     : page.get('name'),
-            value    : page.get('_id'),
-            selected : this.props.page.get('data.model') === page.get('_id'),
-          };
-        });
-      }
 
 
       // ////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,129 @@
+<chat-thread>
+  <div class="chat-thread">
+    <div if={ state.loading } class="my-5 py-5 text-center">
+      <i class="h1 fa fa-spinner fa-spin" />
+    </div>
+    <div if={ !state.loading } each={ (message, i) in state.messages }>
+      <chat-message id={ message.id } message={ message } prev={ state.messages[i - 1] } next={ state.messages[i + 1] } />
+    </div>
+  </div>
+
+  <script>
+    // require base class
+    import dotProp from 'dot-prop';
+
+    // export default
+    export default class ChatThread {
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        // on data
+        this.onData = this.onData.bind(this);
+
+        // set data
+        this.members = new Map();
+        this.messages = new Map();
+
+        // set state
+        this.state.loading = true;
+
+        // create listeners
+        if (typeof window === 'undefined') return;
+
+        // add event listener
+        eden.socket.on(`chat.${this.props.id}`, this.onData);
+
+        // join chat
+        this.joinChat = () => {
+          // call join
+          eden.socket.call('chat.join', this.props.id);
+        };
+
+        // reconnect
+        eden.socket.on('connect', this.joinChat);
+        this.joinChat();
+      }
+
+      /**
+       * on before
+       */
+      onBeforeUnmount(...args) {
+        // create listeners
+        if (typeof window === 'undefined') return;
+
+        // leave
+        eden.socket.off('connect', this.joinChat);
+        eden.socket.off(`chat.${this.props.id}`, this.onData);
+      }
+
+      /**
+       * on data
+       */
+      onData({ type, data }) {
+        // switch type
+        if (type === 'messages') {
+          // undo loading
+          if (this.state.loading) {
+            // loading
+            this.update({
+              loading : false,
+            });
+          }
+          
+          // loop
+          data.forEach((message) => {
+            // get found
+            const found = this.messages.get(message.id);
+
+            // check messages
+            if (found) {
+              // set value
+              Object.keys(message).forEach((k) => found[k] = message[k]);
+            } else {
+              // set message
+              this.messages.set(message.id, message);
+            }
+          });
+
+          // update
+          this.update({
+            messages : this.getMessages(),
+          });
+          
+          // set scrolltop
+          if (this.$('.chat-thread')) this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
+
+          // timeout scroll top
+          setTimeout(() => {
+            // set scrolltop
+            if (this.$('.chat-thread')) this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
+          }, 100);
+        }
+      }
+
+      /**
+       * get messages
+       */
+      getMessages() {
+        // return messages
+        return Array.from(this.messages.values()).sort((a, b) => {
+          // sort
+          if (new Date(a.created_at) > new Date(b.created_at)) return 1;
+          if (new Date(a.created_at) < new Date(b.created_at)) return -1;
+
+          // return 0
+          return 0;
+        });
+      }
+    }
+  </script>
+</chat-thread>
