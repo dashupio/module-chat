@@ -3,7 +3,8 @@
 const { Module } = require('@dashup/module');
 
 // import fields
-const ChatPage = require('./pages/chat');
+const ChatPage    = require('./pages/chat');
+const ChannelPage = require('./pages/channel');
 
 /**
  * export module
@@ -18,6 +19,7 @@ class ChatModule extends Module {
   register(fn) {
     // register sms action
     fn('page', ChatPage);
+    fn('page', ChannelPage);
   }
 }
 
