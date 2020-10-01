@@ -40,12 +40,17 @@
         if (typeof window === 'undefined') return;
 
         // add event listener
-        eden.socket.on(`chat.${this.props.id}`, this.onData);
+        eden.socket.on(`${this.props.id}.messages`, this.onData);
 
         // join chat
         this.joinChat = () => {
           // call join
-          eden.socket.call('chat.join', this.props.id);
+          eden.socket.call('dashup.action', {
+            type : 'page',
+            page : {
+              type : 'channel'
+            },
+          }, 'listen', this.props.id);
         };
 
         // reconnect
@@ -68,46 +73,43 @@
       /**
        * on data
        */
-      onData({ type, data }) {
-        // switch type
-        if (type === 'messages') {
-          // undo loading
-          if (this.state.loading) {
-            // loading
-            this.update({
-              loading : false,
-            });
-          }
-          
-          // loop
-          data.forEach((message) => {
-            // get found
-            const found = this.messages.get(message.id);
-
-            // check messages
-            if (found) {
-              // set value
-              Object.keys(message).forEach((k) => found[k] = message[k]);
-            } else {
-              // set message
-              this.messages.set(message.id, message);
-            }
-          });
-
-          // update
+      onData(messages) {
+        // undo loading
+        if (this.state.loading) {
+          // loading
           this.update({
-            messages : this.getMessages(),
+            loading : false,
           });
+        }
           
+        // loop
+        messages.forEach((message) => {
+          // get found
+          const found = this.messages.get(message.id);
+
+          // check messages
+          if (found) {
+            // set value
+            Object.keys(message).forEach((k) => found[k] = message[k]);
+          } else {
+            // set message
+            this.messages.set(message.id, message);
+          }
+        });
+
+        // update
+        this.update({
+          messages : this.getMessages(),
+        });
+          
+        // set scrolltop
+        if (this.$('.chat-thread')) this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
+
+        // timeout scroll top
+        setTimeout(() => {
           // set scrolltop
           if (this.$('.chat-thread')) this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
-
-          // timeout scroll top
-          setTimeout(() => {
-            // set scrolltop
-            if (this.$('.chat-thread')) this.$('.chat-thread').scrollTop = this.$('.chat-thread').scrollHeight;
-          }, 100);
-        }
+        }, 100);
       }
 
       /**

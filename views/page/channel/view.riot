@@ -1,10 +1,8 @@
 <page-channel-view>
-  <div>
-    <div if={ loading('channel') } class="text-center my-5 py-5">
-      <i class="fa fa-spin fa-spinner h1" />
-    </div>
-    <dashup-view if={ !loading('channel') } view="chat" type="page" { ...getProps() } />
+  <div if={ loading('channel') } class="text-center my-5 py-5">
+    <i class="fa fa-spin fa-spinner h1" />
   </div>
+  <dashup-view if={ !loading('channel') } view="chat" type="page" class="d-flex flex-1" { ...getProps() } />
 
   <script>
     // export default

@@ -4,7 +4,7 @@
       <chat-thread id={ props.page.get('_id') } />
     </div>
 
-    <chat-create if={ props.dashup.can(props.page, 'submit') } scroll-down={ (e) => onScroll(e) } />
+    <chat-create if={ props.dashup.can(props.page, 'submit') } id={ props.page.get('_id') } scroll-down={ (e) => onScroll(e) } />
   </div>
 
   <script>

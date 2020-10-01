@@ -236,15 +236,21 @@
         this.update({
           posting : true,
         });
-
-        // await fetch
-        const result = await eden.router.post(this.props.url, {
+        
+        // call join
+        const message = eden.socket.call('dashup.action', {
+          type : 'page',
+          page : {
+            type : 'channel'
+          },
+        }, 'send', {
           embeds  : this.embeds,
+          subject : this.props.id,
           message : this.$('.chat-control').innerText,
         });
 
         // check if success
-        if (result.success) {
+        if (message) {
           // reset
           this.images = [];
           this.embeds = [];
@@ -254,7 +260,7 @@
           this.$('.chat-control').innerHTML = '';
         } else {
           // alert error message
-          eden.alert.error(result.message);
+          eden.alert.error('Failed to send');
         }
 
         // update
