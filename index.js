@@ -10,6 +10,15 @@ const ChatPage = require('./pages/chat');
  */
 class ChatModule extends Module {
   
+  /**
+   * registers dashup structs
+   *
+   * @param {*} register 
+   */
+  register(fn) {
+    // register sms action
+    fn('page', ChatPage);
+  }
 }
 
 // create new
