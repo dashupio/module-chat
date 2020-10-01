@@ -5,11 +5,11 @@
       Please select at least one <b>model</b> for the messages.
     </a>
 
-    <div if={ loading('grid') } class="text-center my-5 py-5">
+    <div if={ loading('channel') } class="text-center my-5 py-5">
       <i class="fa fa-spin fa-spinner h1" />
     </div>
-    <div if={ !loading('grid') && props.page.get('data.form') } class="dashup-grid">
-
+    <div if={ !loading('channel') && props.page.get('data.form') } class="dashup-grid">
+      SUP
     </div>
   </div>
 

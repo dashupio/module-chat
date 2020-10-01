@@ -20,7 +20,7 @@ export default class ChannelPage extends Struct {
    */
   get icon() {
     // return page type label
-    return 'fa fa-database';
+    return 'fa fa-hashtag';
   }
 
   /**
@@ -64,6 +64,6 @@ export default class ChannelPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Page Descripton';
+    return 'Internal chat channel';
   }
 }

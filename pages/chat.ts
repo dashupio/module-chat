@@ -20,7 +20,7 @@ export default class ChatPage extends Struct {
    */
   get icon() {
     // return page type label
-    return 'fa fa-database';
+    return 'fa fa-comments';
   }
 
   /**
@@ -64,6 +64,6 @@ export default class ChatPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Page Descripton';
+    return 'Embeddable Chat page';
   }
 }
