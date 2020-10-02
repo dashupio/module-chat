@@ -45,12 +45,7 @@
         // join chat
         this.joinChat = () => {
           // call join
-          eden.socket.call('dashup.action', {
-            type : 'page',
-            page : {
-              type : 'channel'
-            },
-          }, 'listen', this.props.id);
+          eden.socket.call('dashup.action', 'page', 'channel', 'listen', this.props.id);
         };
 
         // reconnect

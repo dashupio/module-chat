@@ -238,12 +238,7 @@
         });
         
         // call join
-        const message = eden.socket.call('dashup.action', {
-          type : 'page',
-          page : {
-            type : 'channel'
-          },
-        }, 'send', {
+        const message = await eden.socket.call('dashup.action', 'page', 'channel', 'send', {
           embeds  : this.embeds,
           subject : this.props.id,
           message : this.$('.chat-control').innerText,
@@ -280,11 +275,11 @@
        * @return {Promise}
        */
       async loadEmbed (url) {
-        // await fetch
-        const data = await eden.router.get(`/app/${props.dashup.get('_id')}/chat/embed?url=${encodeURIComponent(url)}`);
+        // call join
+        const data = await eden.socket.call('dashup.action', 'page', 'channel', 'embed', url);
 
         // remove from embeds if fail
-        if (!data.success) {
+        if (!data || !data.type) {
           // disable embed
           this.embed.get(url).disabled = true;
 
@@ -296,7 +291,7 @@
         }
 
         // set data
-        this.embed.get(url).data = data.result;
+        this.embed.get(url).data = data;
         this.embed.get(url).loading = false;
 
         // update
