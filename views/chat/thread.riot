@@ -12,6 +12,9 @@
     // require base class
     import dotProp from 'dot-prop';
 
+    // chat message
+    import chatMessage from './message';
+
     // export default
     export default class ChatThread {
 
@@ -21,6 +24,16 @@
       // RIOT METHODS
       //
       // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * components
+       */
+      static get components() {
+        // return object
+        return {
+          chatMessage,
+        };
+      }
 
       /**
        * on before mount
