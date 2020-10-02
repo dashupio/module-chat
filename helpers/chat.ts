@@ -6,13 +6,6 @@ import config           from 'config';
 import markdownIt       from 'markdown-it';
 import { EventEmitter } from 'events';
 
-// require models
-const Member  = model('member');
-const Message = model('message');
-
-// alert helper
-const alertHelper = helper('alert/module');
-
 /**
  * create social helper class
  *
@@ -34,7 +27,6 @@ class ChatHelper extends EventEmitter {
     this.providers = this.providers.bind(this);
 
     // build placement helper
-    this.__providers = [];
     this.__markdown = markdownIt({
       html     : true,
       breaks   : true,
@@ -157,118 +149,6 @@ class ChatHelper extends EventEmitter {
 
     // create alert
     if (item) await alertHelper.create(from, item);
-  }
-
-  /**
-   * creates embed provider
-   *
-   * @param  {String}   name
-   * @param  {Regexp}   match
-   * @param  {Function} parse
-   *
-   * @return {*}
-   */
-  provider(name, match, parse) {
-    // check found
-    const found = this.__providers.find(provider => provider.name === name);
-
-    // push block
-    if (!found) {
-      // check found
-      this.__providers.push({
-        name,
-        match,
-        parse,
-      });
-    } else {
-      // set on found
-      found.name = name;
-      found.match = match;
-      found.parse = parse;
-    }
-  }
-
-  /**
-   * gets blocks
-   *
-   * @return {Array}
-   */
-  providers() {
-    // returns blocks
-    return this.__providers;
-  }
-
-  /**
-   * return embed
-   *
-   * @param  {String}  url
-   *
-   * @return {Promise}
-   */
-  async embed(url) {
-    // check embed
-    if (await this.eden.get(`embed.parse.${url}`, true)) return await this.eden.get(`embed.parse.${url}`, true);
-
-    // providers
-    const localProvider = this.providers().find((provider) => {
-      // test match
-      return url.match(provider.match);
-    });
-
-    // check local provider
-    if (localProvider) {
-      // parse url
-      return await localProvider.parse(url);
-    }
-
-    // try/catch
-    try {
-      // load from embed.rocks
-      const res = await fetch(`https://api.embed.rocks/api?url=${encodeURIComponent(url)}&autoplay=1`, {
-        headers : {
-          'x-api-key' : config.get('embed.rocks.secret'),
-        },
-      });
-
-      // get json
-      const data = await res.json();
-
-      // author
-      data.author = data.oembed ? {
-        url  : data.oembed.author_url,
-        name : data.oembed.author_name,
-      } : null;
-      data.provider = {
-        url  : data.oembed ? data.oembed.provider_url : url,
-        name : data.oembed ? data.oembed.provider_name : data.site,
-      };
-
-      // set html
-      if (data.html && data.html.includes('iframe')) {
-        // set html
-        data.html = data.html.split('<iframe')[1].split('/iframe')[0];
-        data.html = `<iframe class="embed-responsive-item" frameborder="0" scrolling="no" allowfullscreen="true"${data.html.replace(/style="[a-zA-Z0-9\s:;.()\-,]*"/gi, '')}/iframe>`;
-      } else if (data.html && data.html.includes('<video')) {
-        // set html
-        data.tag = 'video';
-        data.html = (data.html || '').split('<video')[1].split('/video')[0];
-        data.html = `<video ${data.html.replace(/style="[a-zA-Z0-9\s:;.()\-,]*"/gi, '')}/video>`;
-      } else if (data.type === 'rich' && data.images.length) {
-        data.html = `<img src="${data.images[0].url}" class="img-fluid" />`;
-      }
-
-      // delete logic not required
-      delete data.article;
-      delete data.oembed;
-      delete data.site;
-
-      // return data
-      this.eden.set(`embed.parse.${url}`, data, true);
-      return data;
-    } catch (e) {}
-
-    // return null
-    return null;
   }
 
   /**
