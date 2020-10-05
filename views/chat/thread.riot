@@ -53,12 +53,18 @@
         if (typeof window === 'undefined') return;
 
         // add event listener
-        eden.socket.on(`${this.props.id}.messages`, this.onData);
+        eden.socket.on(`messages.${this.props.id}`, this.onData);
 
         // join chat
-        this.joinChat = () => {
+        this.joinChat = async () => {
           // call join
-          eden.socket.call('dashup.action', 'page', 'channel', 'listen', this.props.id);
+          const messages = await this.props.dashup.action({
+            type   : 'page',
+            struct : 'channel',
+          }, 'listen', this.props.id);
+
+          // on data
+          this.onData(messages);
         };
 
         // reconnect

@@ -2,11 +2,11 @@
   <div if={ loading('channel') } class="text-center my-5 py-5">
     <i class="fa fa-spin fa-spinner h1" />
   </div>
-  <dashup-view if={ !loading('channel') } view="chat" type="page" class="d-flex flex-1" { ...getProps() } />
+  <dashup-view if={ !loading('channel') } type="page" struct="channel" view="chat" class="d-flex flex-1" { ...getProps() } />
 
   <script>
     // export default
-    export default class PageChatView {
+    export default class PageChannelView {
 
       /**
        * on before mount

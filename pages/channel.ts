@@ -108,17 +108,17 @@ export default class ChannelPage extends Struct {
    * @param message 
    * @param embeds 
    */
-  async sendAction({ session, user }, { subject, message, embeds }) {
+  async sendAction(opts, { subject, message, embeds }) {
     // create message
-    const actualMessage = await this.dashup.connection.rpc('update.message', user, {
+    const actualMessage = await this.dashup.connection.rpc(opts, 'message.update', opts.user, {
       embeds,
       subject,
       message,
     });
 
     // emit to room
-    this.dashup.connection.rpc('socket.room', subject, `${subject}.messages`, [actualMessage]);
-    this.dashup.connection.event('message.sent', subject, actualMessage);
+    this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
+    this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
 
     // return message
     return actualMessage;
@@ -130,9 +130,9 @@ export default class ChannelPage extends Struct {
    * @param data 
    * @param subject 
    */
-  async countAction({ session }, subject) {
+  async countAction(opts, subject) {
     // deafen action
-    return this.dashup.connection.rpc('count.message', subject);
+    return this.dashup.connection.rpc(opts, 'message.count', subject);
   }
 
   /**
@@ -141,16 +141,15 @@ export default class ChannelPage extends Struct {
    * @param data 
    * @param subject 
    */
-  async listenAction({ session }, subject) {
+  async listenAction(opts, subject) {
     // listen
-    const messages = await this.dashup.connection.rpc('query.message', subject);
+    const messages = await this.dashup.connection.rpc(opts, 'message.query', subject);
 
     // listen
-    this.dashup.connection.rpc('socket.emit', session, `${subject}.messages`, messages);
-    this.dashup.connection.rpc('subscribe.message', session, subject);
+    this.dashup.connection.rpc(opts, 'message.subscribe', subject);
 
     // return true
-    return true;
+    return messages;
   }
 
   /**
@@ -159,9 +158,9 @@ export default class ChannelPage extends Struct {
    * @param data 
    * @param subject 
    */
-  async deafenAction({ session }, subject) {
+  async deafenAction(opts, subject) {
     // deafen action
-    this.dashup.connection.rpc('unsubscribe.message', session, subject);
+    this.dashup.connection.rpc(opts, 'message.unsubscribe', subject);
 
     // return true
     return true;
@@ -171,7 +170,7 @@ export default class ChannelPage extends Struct {
    * embed parser
    * @param url 
    */
-  async embedAction({ session }, url) {
+  async embedAction(opts, url) {
     // try/catch
     try {
       // load from embed.rocks
