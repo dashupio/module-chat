@@ -1,21 +1,59 @@
 <page-chat-view>
-  <div>
-    <a href="#!" class="d-block alert alert-info mb-3" if={ !props.page.get('data.model') } onclick={ (e) => props.onConfig(e) }>
-      <i class="fa fa-exclamation-triangle mr-2" />
-      Please select at least one <b>model</b> for the messages.
-    </a>
+  <div class="d-flex flex-column flex-1">
+    <div class="row g-0 flex-1">
 
-    <div if={ loading('grid') } class="text-center my-5 py-5">
-      <i class="fa fa-spin fa-spinner h1" />
-    </div>
-    <div if={ !loading('grid') && props.page.get('data.form') } class="dashup-grid">
+      <!-- CHAT LIST -->
+      <div class="col chat-column mb-4 mb-lg-0">
+        <div class="column-body">
+          <div class="column-body-inner">
+            <div class="card">
+              <div class="card-body task-container">
+                <chat-task each={ (item, i) in state.items } item={ item } page={ props.page } add-user={ onAddUser } add-tag={ onAddTag } on-item={ (e) => props.onItem(e, item) } on-click={ (e) => state.item && state.item.get('_id') === item.get('_id') ? props.onItem(e, item) : onClick(e, item) } class={ classes({ 'd-none' : !isVisible(item), 'active' : state.item && state.item.get('_id') === item.get('_id') }) } />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- / CHAT LIST -->
 
+      <!-- CHAT BODY -->
+      <div class="col ml-3 d-flex flex-column" if={ loading('chat') }>
+        <div class="mx-auto my-5">
+          <i class="fa fa-spinner fa-spin h1" />
+        </div>
+      </div>
+      <!-- / CHAT BODY -->
+
+      <!-- CHAT MAIN -->
+      <div class="col ml-3 d-flex flex-column" if={ !loading('chat') && state.item }>
+        <dashup-view type="page" struct="channel" view="chat" class="d-flex flex-1" dashup={ props.dashup } page={ props.page } item={ state.item } />
+      </div>
+      <!-- / CHAT MAIN -->
     </div>
+
+    <!-- TAGS -->
+    <div class="dropdown-menu show m-0 p-0" if={ state.model && state.menu === 'tag' } aria-labelledby={ `tag-${state.model.get('_id')}` } id={ `tag-dd-${state.model.get('_id')}` }>
+      <dashup-tag ref={ ref('model') } { ...props } />
+    </div>
+    <div class="dropdown-menu show m-0 p-0" if={ state.model && state.menu === 'user' } aria-labelledby={ `user-${state.model.get('_id')}` } id={ `user-dd-${state.model.get('_id')}` }>
+      <dashup-user ref={ ref('model') } { ...props } />
+    </div>
+    <!-- / TAGS -->
   </div>
 
   <script>
+    // perfect
+    import PerfectScrollbar from 'perfect-scrollbar';
+
     // export default
     export default class PageChatView {
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // RIOT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
 
       /**
        * on before mount
@@ -28,10 +66,45 @@
         this.safeUpdate = () => {
           this.update();
         };
+        
+        // bind
+        this.init    = this.init.bind(this);
+        this.onClick = this.onClick.bind(this);
 
         // listeners
         this.props.page.on('reload', this.safeUpdate);
         this.props.page.on('data.form', this.safeUpdate);
+      }
+      
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onMounted(...args) {
+        // check window
+        if (typeof window === 'undefined') return;
+        
+        // init
+        this.init();
+      }
+      
+      /**
+       * on mounted
+       *
+       * @param {Array} args
+       */
+      onUpdated(...args) {
+        // check window
+        if (typeof window === 'undefined') return;
+        
+        // set ps
+        if (!this.$('.task-container.ps') && this.$('.task-container')) {
+          // perfect scrollbar
+          this.ps = new PerfectScrollbar(this.$('.task-container'), {
+            suppressScrollX : true,
+          });
+        }
       }
 
       /**
@@ -45,6 +118,13 @@
         this.props.page.removeListener('reload', this.safeUpdate);
         this.props.page.removeListener('data.form', this.safeUpdate);
       }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // GET METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
 
       /**
        * get props
@@ -62,6 +142,177 @@
         // return
         return newProps;
       }
+      
+      /**
+       * is filter me
+       */
+      isFilter(type, val) {
+        // check me
+        return ((this.props.page.get('user.filter') || {})[type] || false) === val;
+      }
+
+      /**
+       * check visible
+       */
+      isVisible(task) {
+        // tags
+        const tags = this.props.search && this.props.search.length ? this.props.search.toLowerCase().split(' ') : [];
+
+        // check filter
+        if (this.isFilter('me', true)) {
+          // check vals
+          const userField = this.getFields().find((f) => f.uuid === this.props.page.get('data.user'));
+
+          // get vals
+          let vals = task.get(userField ? userField.name || userField.uuid : 'null') || [];
+
+          // vals
+          if (vals && !Array.isArray(vals)) vals = [vals];
+
+          // only me
+          if (!vals.find((val) => {
+            // user
+            return val.user === this.props.me.get('id');
+          })) return false;
+        }
+
+        // check tags
+        if ((this.props.page.get('user.filter.tags') || []).length) {
+          // check vals
+          const userField = this.getFields().find((f) => f.uuid === this.props.page.get('data.tag'));
+
+          // check filter
+          if (this.props.page.get('user.filter.tags').find((tag) => {
+            // check tag exists on task
+            let val = task.get(tagField ? tagField.name || tagField.uuid : 'null') || [];
+
+            // set value
+            if (typeof val === 'string') val = [val];
+
+            // check tag
+            return !val.includes(tag);
+          })) return false;
+        }
+
+        // filter
+        if (tags.length) {
+          // search item
+          const searchable = JSON.stringify(task.get()).toLowerCase();
+
+          // search JSON
+          if (tags.find((tag) => {
+            // check
+            return !searchable.includes(tag);
+          })) return false;
+        }
+
+        // return true
+        return true;
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // EVENT METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * on click
+       */
+      onClick(e, item) {
+        // prevent default
+        e.preventDefault();
+        e.stopPropagation();
+  
+        // loading chat
+        this.loading('chat', true);
+
+        // update state
+        this.update({
+          item,
+        });
+
+        // timeout fix
+        setTimeout(() => this.loading('chat', false), 10);
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // Init Methods
+      //
+      // ////////////////////////////////////////////////////////////////////////////
+  
+      /**
+       * init
+       */
+      async init() {
+        // items
+        if (this.state.items && this.state.items.removeListener) {
+          // safe update
+          this.state.items.removeListener('update', this.safeUpdate);
+        }
+
+        // get model
+        let items = [];
+        const model = this.props.page.get('data.model');
+
+        // query by
+        if (model) {
+          // set query
+          let query = this.props.dashup.page(model).sort('updated_at', -1);
+
+          // check items
+          if (this.props.page.get('data.form')) {
+            // loop forms
+            query = query.where({
+              '_meta.form' : this.props.page.get('data.form')
+            });
+          }
+
+          // load filter
+          let filter = null;
+
+          // try/catch
+          try {
+            filter = JSON.parse(this.props.page.get('data.filter'));
+          } catch (e) {}
+  
+          // add initial where
+          if (filter) {
+            // add wheres
+            filter.forEach((where) => {
+              // where
+              query = query.where(where);
+            });
+          }
+
+          // check where
+          (this.props.page.get('user.where') || []).forEach((where) => {
+            // add query
+            query = query[where[0]](where[1], where[2]);
+          });
+
+          // listen
+          items = await query.listen();
+        }
+
+        // update
+        this.update({
+          items,
+        });
+
+        // safe update
+        if (items && items.on) items.on('update', this.safeUpdate);
+      }
+
+
+      // ////////////////////////////////////////////////////////////////////////////
+      //
+      // MISC METHODS
+      //
+      // ////////////////////////////////////////////////////////////////////////////
 
       /**
        * ref
@@ -75,6 +326,14 @@
           // set ref
           this.refs[name] = that;
         };
+      }
+
+      /**
+       * classes
+       */
+      classes(obj) {
+        // return object
+        return Object.keys(obj).filter((k) => obj[k]).join(' ');
       }
 
       /**

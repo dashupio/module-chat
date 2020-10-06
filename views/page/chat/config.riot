@@ -2,13 +2,69 @@
   <div>
     <div class="mb-3">
       <label class="form-label">
-        Message Model
+        Chat Model
       </label>
       <eden-select on-change={ (e, val) => onModel(val) } ref={ ref('model') } placeholder="Select Model" data={ getModel() } />
-      <small>
-        The model this page should display.
-      </small>
     </div>
+    <div if={ !loading('model') && props.page.get('data.model') } class="mb-3">
+      <label class="form-label">
+        Chat Form
+      </label>
+      <eden-select on-change={ (e, val) => onForm(val) } ref={ ref('form') } placeholder="Select Form" data={ getForm() } />
+    </div>
+    <div if={ !loading('model') && !loading('form') && props.page.get('data.form') }>
+      <hr />
+      
+      <div class="mb-3" each={ (field, i) in fields }>
+        <label class="form-label">
+          { field.label } Field
+        </label>
+        <eden-select on-change={ (e, value) => onField(field.name, value) } ref={ ref(field.name) } placeholder={ `Select ${field.label}` } data={ getField(field.name) } />
+      </div>
+        
+      <div class="mb-3">
+        <label class="form-label">
+          Tag Field
+        </label>
+        <eden-select on-change={ (e, val) => onTag(val) } ref={ ref('tag') } placeholder="Select Tag Field" data={ getTag() } />
+        <small>
+          Selecting a tag field will allow you to tag tasks.
+        </small>
+      </div>
+        
+      <div class="mb-3">
+        <label class="form-label">
+          User Field
+        </label>
+        <eden-select on-change={ (e, val) => onUser(val) } ref={ ref('user') } placeholder="Select User Field" data={ getUser() } />
+        <small>
+          Selecting a user field will allow you to assign tasks to that user.
+        </small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">
+          Item Display
+        </label>
+        <code-block ref={ ref('display') } mode="handlebars" content={ props.page.get('data.display') || '' } prevent-update={ true } on-change={ (e) => onDisplay(e) } />
+        <div class="alert alert-primary mt-2">
+          <hbs template={ props.page.get('data.display') || '' } data={ state.test ? state.test.get() : {} } />
+        </div>
+      </div>
+    </div>
+
+    <div if={ props.page.get('data.form') }>
+      <hr />
+        
+      <div class="mb-3">
+        <label class="form-label">
+          Filter By
+        </label>
+
+        <dashup-query fields={ state.fields } on-change={ (val) => onFilter(val) } value={ props.page.get('data.filter') ? JSON.parse(props.page.get('data.filter')) : [] } />
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -28,6 +84,20 @@
       onBeforeMount() {
         // bind methods
         this.onModel = this.onModel.bind(this);
+
+        // set fields
+        this.fields = [
+          {
+            name  : 'name',
+            type  : 'text',
+            label : 'Name'
+          },
+          {
+            name  : 'email',
+            type  : 'email',
+            label : 'Email'
+          },
+        ];
       }
 
 
@@ -47,23 +117,99 @@
         // model
         if (!val || !val.length) return;
 
-        // get module
-        const mod = this.props.dashup.page(val);
-
         // loading model
         this.loading('model', true);
-
-        // set again
-        if (mod.get('_id') !== this.props.page.get('data.model')) {
-          // set form again
-          await this.props.data('form', null);
-        }
         
         // set model
-        await this.props.data('model', mod.get('_id'));
+        await this.props.data('model', val);
 
         // loading model
         this.loading('model', false);
+      }
+
+      /**
+       * on model
+       */
+      async onForm(val) {
+        // get value
+        if (!val) val = this.refs.form.val();
+
+        // model
+        if (!val || !val.length) return;
+
+        // loading model
+        this.loading('form', true);
+        
+        // set model
+        await this.props.data('form', val);
+
+        // loading model
+        this.loading('form', false);
+      }
+
+      /**
+       * on model
+       */
+      async onField(type, val) {
+        // get value
+        if (!val) val = this.refs[type].val();
+
+        // model
+        if (!val || !val.length) return;
+
+        // field
+        const data = this.props.page.get('data.field') || {};
+
+        // set data
+        data[type] = val;
+        
+        // set model
+        this.props.onData('field', data);
+      }
+
+      /**
+       * on model
+       */
+      async onTag(id) {
+        // get value
+        if (!id) id = this.refs.tag.val();
+
+        // model
+        if (!id || !id.length) return;
+        
+        // set model
+        this.props.data('tag', id);
+      }
+
+      /**
+       * on model
+       */
+      async onUser(id) {
+        // get value
+        if (!id) id = this.refs.user.val();
+
+        // model
+        if (!id || !id.length) return;
+        
+        // set model
+        this.props.data('user', id);
+      }
+
+      /**
+       * on color
+       */
+      onDisplay(value) {
+        // set color
+        this.props.data('display', value, true);
+        this.update();
+      }
+
+      /**
+       * on model
+       */
+      onFilter(val) {
+        // set model
+        this.props.data('filter', JSON.stringify(val));
       }
 
 
@@ -87,6 +233,101 @@
             name     : page.get('name'),
             value    : page.get('_id'),
             selected : this.props.page.get('data.model') === page.get('_id'),
+          };
+        });
+      }
+
+      /**
+       * get value
+       */
+      getForm() {
+        // return value
+        return Array.from(this.props.dashup.get('pages').values()).filter((page) => {
+          // return model pages
+          return page.get('type') === 'form' && page.get('data.model') === this.props.page.get('data.model');
+        }).map((page) => {
+          // return type
+          return {
+            name     : page.get('name'),
+            value    : page.get('_id'),
+            selected : this.props.page.get('data.form') === page.get('_id'),
+          };
+        });
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // reduce
+        return [this.props.page.get('data.form')].reduce((accum, form) => {
+          // check form
+          if (!form) return accum;
+
+          // get form
+          const actualForm = this.props.dashup.page(form);
+
+          // check fields
+          if (!actualForm || !actualForm.get('data.fields')) return [];
+
+          // return data
+          accum.push(...(actualForm.get('data.fields').map((field) => {
+            // clone field
+            const newField = { ...field };
+
+            // set form
+            newField.form = form;
+
+            // new field
+            return newField;
+          })));
+
+          // return accum
+          return accum;
+        }, []);
+      }
+
+      /**
+       * get field
+       */
+      getField(type) {
+        // return value
+        return this.getFields().map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get(`data.field.${type}`) === field.uuid,
+          };
+        });
+      }
+
+      /**
+       * get field
+       */
+      getTag() {
+        // return value
+        return this.getFields().map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get('data.tag') === field.uuid,
+          };
+        });
+      }
+
+      /**
+       * get field
+       */
+      getUser() {
+        // return value
+        return this.getFields().map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : this.props.page.get('data.user') === field.uuid,
           };
         });
       }
