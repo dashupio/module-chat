@@ -1,0 +1,88 @@
+<page-chat-filter>
+  <dashup-page-filter tags={ getTags() } fields={ getFields() } on-search={ (e) => onSearch(e) } has-user={ true } { ...getProps() } />
+
+  <script>
+    // export default
+    export default class PageBoardFilter {
+      
+      /**
+       * on before mount
+       */
+      onBeforeMount(...args) {
+        
+        // bind
+        this.onSearch = this.onSearch.bind(this);
+      }
+
+      /**
+       * on search
+       */
+      onSearch(e, target) {
+        // search
+        this.props.props('search', (target || e.target).value);
+      }
+
+      /**
+       * get props
+       */
+      getProps() {
+        // create object
+        const newProps = Object.assign({}, this.props);
+
+        // delete fields
+        delete newProps.is;
+        delete newProps.fields;
+
+        // return new props
+        return newProps;
+      }
+
+      /**
+       * get field
+       */
+      getTags() {
+        // get tag values
+        const fields = this.getFields();
+        const tagField = fields.find((f) => f.uuid === this.props.page.get('data.tag'));
+
+        // tag field
+        if (!tagField) return [];
+
+        // get options
+        return tagField.options || [];
+      }
+
+      /**
+       * get fields
+       */
+      getFields() {
+        // reduce
+        return (this.props.page.get('data.forms') || []).reduce((accum, form) => {
+          // check form
+          if (!form) return accum;
+
+          // get form
+          const actualForm = this.props.dashup.page(form);
+
+          // check fields
+          if (!actualForm || !actualForm.get('data.fields')) return [];
+
+          // return data
+          accum.push(...(actualForm.get('data.fields').map((field) => {
+            // clone field
+            const newField = { ...field };
+
+            // set form
+            newField.form = form;
+
+            // new field
+            return newField;
+          })));
+
+          // return accum
+          return accum;
+        }, []);
+      }
+    }
+  </script>
+</page-chat-filter>

@@ -50,6 +50,7 @@ export default class ChatPage extends Struct {
       view     : 'page/chat/view',
       menu     : 'page/chat/menu',
       config   : 'page/chat/config',
+      filter   : 'page/chat/filter',
       connects : 'page/chat/connects',
     };
   }

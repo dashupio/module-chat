@@ -243,7 +243,7 @@
         // check tags
         if ((this.props.page.get('user.filter.tags') || []).length) {
           // check vals
-          const userField = this.state.fields.find((f) => f.uuid === this.props.page.get('data.tag'));
+          const tagField = this.state.fields.find((f) => f.uuid === this.props.page.get('data.tag'));
 
           // check filter
           if (this.props.page.get('user.filter.tags').find((tag) => {
