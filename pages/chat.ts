@@ -47,9 +47,10 @@ export default class ChatPage extends Struct {
     return {
       chat : 'chat',
       
-      view   : 'page/chat/view',
-      menu   : 'page/chat/menu',
-      config : 'page/chat/config',
+      view     : 'page/chat/view',
+      menu     : 'page/chat/menu',
+      config   : 'page/chat/config',
+      connects : 'page/chat/connects',
     };
   }
 
