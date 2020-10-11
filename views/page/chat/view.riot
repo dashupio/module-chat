@@ -8,7 +8,7 @@
           <div class="column-body-inner">
             <div class="card">
               <div class="card-body task-container">
-                <page-chat-task each={ (item, i) in state.items } item={ item } page={ props.page } form-fields={ state.fields } add-user={ onAddUser } add-tag={ onAddTag } on-item={ (e) => props.onItem(e, item) } on-click={ (e) => state.item && state.item.get('_id') === item.get('_id') ? props.onItem(e, item) : onClick(e, item) } class={ classes({ 'd-none' : !isVisible(item), 'active' : state.item && state.item.get('_id') === item.get('_id') }) } />
+                <page-chat-task each={ (item, i) in state.items } item={ item } page={ props.page } form-fields={ props.context.fields } add-user={ props.adduser } add-tag={ props.addTag } on-item={ (e) => props.onItem(e, item) } on-click={ (e) => state.item && state.item.get('_id') === item.get('_id') ? props.onItem(e, item) : onClick(e, item) } class={ classes({ 'd-none' : !isVisible(item), 'active' : state.item && state.item.get('_id') === item.get('_id') }) } />
               </div>
             </div>
           </div>
@@ -30,15 +30,6 @@
       </div>
       <!-- / CHAT MAIN -->
     </div>
-
-    <!-- TAGS -->
-    <div class="dropdown-menu show m-0 p-0" if={ state.model && state.menu === 'tag' } aria-labelledby={ `tag-${state.model.get('_id')}` } id={ `tag-dd-${state.model.get('_id')}` }>
-      <dashup-tag ref={ ref('model') } { ...props } />
-    </div>
-    <div class="dropdown-menu show m-0 p-0" if={ state.model && state.menu === 'user' } aria-labelledby={ `user-${state.model.get('_id')}` } id={ `user-dd-${state.model.get('_id')}` }>
-      <dashup-user ref={ ref('model') } { ...props } />
-    </div>
-    <!-- / TAGS -->
   </div>
 
   <script>
@@ -79,9 +70,6 @@
         this.safeUpdate = () => {
           this.update();
         };
-
-        // fields
-        this.state.fields = this.getFields();
         
         // bind
         this.init    = this.init.bind(this);
@@ -97,25 +85,9 @@
        *
        * @param {Array} args
        */
-      onBeforeUpdate(...args) {
-        // check window
-        if (typeof window === 'undefined') return;
-
-        // fields
-        this.state.fields = this.getFields();
-      }
-      
-      /**
-       * on mounted
-       *
-       * @param {Array} args
-       */
       onMounted(...args) {
         // check window
         if (typeof window === 'undefined') return;
-
-        // fields
-        this.state.fields = this.getFields();
         
         // init
         this.init();
@@ -174,38 +146,6 @@
         // return
         return newProps;
       }
-
-      /**
-       * get fields
-       */
-      getFields() {
-        // reduce
-        return [this.props.page.get('data.form')].reduce((accum, form) => {
-          // check form
-          if (!form) return accum;
-
-          // get form
-          const actualForm = this.props.dashup.page(form);
-
-          // check fields
-          if (!actualForm || !actualForm.get('data.fields')) return [];
-
-          // return data
-          accum.push(...(actualForm.get('data.fields').map((field) => {
-            // clone field
-            const newField = { ...field };
-
-            // set form
-            newField.form = form;
-
-            // new field
-            return newField;
-          })));
-
-          // return accum
-          return accum;
-        }, []);
-      }
       
       /**
        * is filter me
@@ -225,7 +165,7 @@
         // check filter
         if (this.isFilter('me', true)) {
           // check vals
-          const userField = this.state.fields.find((f) => f.uuid === this.props.page.get('data.user'));
+          const userField = this.props.context.fields.find((f) => f.uuid === this.props.page.get('data.user'));
 
           // get vals
           let vals = task.get(userField ? userField.name || userField.uuid : 'null') || [];
@@ -243,7 +183,7 @@
         // check tags
         if ((this.props.page.get('user.filter.tags') || []).length) {
           // check vals
-          const tagField = this.state.fields.find((f) => f.uuid === this.props.page.get('data.tag'));
+          const tagField = this.props.context.fields.find((f) => f.uuid === this.props.page.get('data.tag'));
 
           // check filter
           if (this.props.page.get('user.filter.tags').find((tag) => {

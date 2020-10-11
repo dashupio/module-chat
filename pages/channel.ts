@@ -108,9 +108,10 @@ export default class ChannelPage extends Struct {
    * @param message 
    * @param embeds 
    */
-  async sendAction(opts, { subject, message, embeds }) {
+  async sendAction(opts, { temp, subject, message, embeds }) {
     // create message
     const actualMessage = await this.dashup.connection.rpc(opts, 'message.update', opts.user, {
+      temp,
       embeds,
       subject,
       message,

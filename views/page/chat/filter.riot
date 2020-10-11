@@ -1,5 +1,5 @@
 <page-chat-filter>
-  <dashup-page-filter tags={ getTags() } fields={ getFields() } on-search={ (e) => onSearch(e) } has-user={ true } { ...getProps() } />
+  <dashup-page-filter tags={ getTags() } fields={ props.context.fields } on-search={ (e) => onSearch(e) } has-user={ true } { ...getProps() } />
 
   <script>
     // export default
@@ -42,7 +42,7 @@
        */
       getTags() {
         // get tag values
-        const fields = this.getFields();
+        const fields = this.props.context.fields;
         const tagField = fields.find((f) => f.uuid === this.props.page.get('data.tag'));
 
         // tag field
@@ -50,38 +50,6 @@
 
         // get options
         return tagField.options || [];
-      }
-
-      /**
-       * get fields
-       */
-      getFields() {
-        // reduce
-        return (this.props.page.get('data.forms') || []).reduce((accum, form) => {
-          // check form
-          if (!form) return accum;
-
-          // get form
-          const actualForm = this.props.dashup.page(form);
-
-          // check fields
-          if (!actualForm || !actualForm.get('data.fields')) return [];
-
-          // return data
-          accum.push(...(actualForm.get('data.fields').map((field) => {
-            // clone field
-            const newField = { ...field };
-
-            // set form
-            newField.form = form;
-
-            // new field
-            return newField;
-          })));
-
-          // return accum
-          return accum;
-        }, []);
       }
     }
   </script>

@@ -1,0 +1,172 @@
+<page-chat-chat-message>
+  <div class={ `${getClass('message', 'dashup-message')}${props.message.get('by.type') === 'embedded' ? ` ${getClass('messageMine', 'is-mine')}` : ''}${inThread() ? ` ${getClass('messageThread', 'in-thread')}` : ''}` }>
+    <div class={ getClass('messageAvatar', 'dashup-message-avatar') }>
+      <img if={ props.message.get('by.avatar') } src={ props.message.get('by.avatar') } class={ getClass('messageAvatarImg', 'rounded-circle img-fluid') } />
+    </div>
+    <div class={ getClass('messageBody', 'dashup-message-body') }>
+      <div class={ getClass('messageBy', 'dashup-message-by') }>
+        <span class={ getClass('messageByB', 'mr-1 dashup-message-username') } if={ props.message.get('by.type') === 'embedded' || props.message.get('by.name') }>
+          { props.message.get('by.type') === 'embedded' ? 'You' : props.message.get('by.name').split(' ')[0] }
+        </span>
+        <small class={ getClass('messageTime', 'text-muted dashup-message-time') }>
+          { getDate(props.message.get('created_at')) }
+        </small>
+      </div>
+      <div class="flex-1">
+        <div class={ `${getClass('messageContent', 'dashup-message-content d-inline-block')} ${props.message.get('by.type') === 'embedded' ? getClass('messageContentMine', 'bg-info text-white') : getClass('messageContentTheirs', 'bg-primary text-white')}` }>
+          <raw data={ { html : renderText(props.message.get('parsed') || props.message.get('message')) } } />
+        </div>
+      </div>
+      <div if={ props.message.get('embeds.0') } class={ getClass('messageEmbeds', 'message-embeds mb-2') }>
+        <div each={ (embed, i) in props.message.get('embeds') } class={ getClass('messageEmbed', 'card mt-2') }>
+          <div class={ getClass('messageEmbedBody', 'card-body') }>
+            <chat-embed in-message={ true } embed={ { data : embed } } class={ getClass('messageEmbedElement', 'dashup-embed-child') } />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // require base class
+    import raw from '../raw.riot';
+    import uuid from 'uuid';
+    import moment from 'moment';
+
+    // export default
+    export default {
+      components : {
+        raw,
+      },
+
+      /**
+       * in thread
+       */
+      inThread() {
+        // return in thread
+        return this.props.message.get('by.id') === (this.props.prev && this.props.prev.get('by.id'));
+      },
+      
+      /**
+      * get date
+      *
+      * @param  {Date} created_at
+      *
+      * @return {String}
+      */
+      getDate(date) {
+        // from now
+        return moment(date).fromNow();
+      },
+
+      /**
+       * get class
+       */
+      getClass(name, def) {
+        // classes
+        const classes = this.props.classes || {};
+        
+        // check name
+        if (!classes[name]) return def;
+
+        // return props
+        return classes[name];
+      },
+
+      /**
+      * parse tags out of message text
+      *
+      * @param  {String} text
+      *
+      * @return {Array}
+      */
+      renderText(text) {
+        // add placeholders
+        const tags = ((text || '').match(/<(\w+):(.*?)\|(\w+)>/g) || []).map((val) => {
+          // replace tag
+          const tag = val.replace('<', '').replace('>', '');
+
+          // return tag
+          const parsed = {
+            id    : tag.split('|')[1].trim(),
+            type  : tag.split(':')[0].trim(),
+            text  : val,
+            uuid  : uuid(),
+            page  : tag.split(':')[0].trim() === 'page' ? props.dashup.page(tag.split('|')[1].trim()) : null,
+            title : tag.split(':')[1].split('|')[0].trim(),
+          };
+
+          // return tag
+          return parsed;
+        });
+
+        // colors
+        const colors = {
+          user : 'primary',
+        };
+
+        // loop tags
+        tags.forEach((tag) => {
+          // check user
+          if (tag.type === 'user') {
+            // join tags
+            text = text.split(tag.text).join(`<span class="badge badge-${colors[tag.type]} badge-tag"><i class="fa fa-at"></i><span class="content">${tag.title}</span></span>`);
+          }
+          if (tag.type === 'page' && tag.page) {
+            // get parent
+            const parent = tag.page.get('parent') && this.props.dashup.page(tag.page.get('parent'));
+
+            // join tags
+            text = text.split(tag.text).join(`<a href="/app/${tag.page.get('_id')}" class="badge badge-${tag.page.get('color') || (parent && parent.get('color')) || 'secondary'} badge-tag"><i class="fa-${tag.page.get('icon') || 'pencil fa'}"></i><span class="content">${tag.page.get('name')}</span></a>`);
+          }
+        });
+
+        // return text
+        return text;
+      },
+    }
+  </script>
+
+  <style>
+    .dashup-message {
+      display        : flex;
+      flex-direction : row;
+    }
+    .dashup-message.is-mine .dashup-message-body {
+      text-align  : right;
+      margin-left : auto;
+    }
+    .dashup-message .dashup-message-avatar {
+      min-width    : 1.5rem;
+      max-width    : 1.5rem;
+      margin-right : 0.5rem;
+    }
+    .dashup-message .dashup-message-avatar img {
+      width         : 1.5rem;
+      height        : 1.5rem;
+      border-radius : 50%;
+    }
+    .dashup-message .dashup-message-content {
+      padding       : 0.25rem 0.5rem;
+      margin-bottom : 0.25rem;
+
+      border-radius          : 0.25rem;
+      border-top-left-radius : 0;
+    }
+    .dashup-message.is-mine .dashup-message-content {
+      border-radius           : 0.25rem;
+      border-top-right-radius : 0;
+    }
+    .dashup-message .dashup-message-by {
+      margin-bottom : 0.25rem;
+    }
+    .dashup-message.in-thread .dashup-message-by {
+      margin-bottom : 0;
+    }
+    .dashup-message.in-thread .dashup-message-avatar img,
+    .dashup-message.in-thread .dashup-message-by .dashup-message-time,
+    .dashup-message.in-thread .dashup-message-by .dashup-message-username {
+      display : none;
+    }
+  </style>
+</page-chat-chat-message>

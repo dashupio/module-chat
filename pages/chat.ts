@@ -45,7 +45,7 @@ export default class ChatPage extends Struct {
   get views() {
     // return object of views
     return {
-      chat : 'chat',
+      chat : 'page/chat/chat',
       
       view     : 'page/chat/view',
       menu     : 'page/chat/menu',
