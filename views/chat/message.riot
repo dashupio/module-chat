@@ -31,6 +31,9 @@
     import moment from 'moment';
     import dotProp from 'dot-prop';
 
+    // chat embed
+    import chatEmbed from './embed';
+
     // export default
     export default class ChatMessage {
 
@@ -40,6 +43,16 @@
       // RIOT METHODS
       //
       // ////////////////////////////////////////////////////////////////////////////
+
+      /**
+       * get components
+       */
+      static get components() {
+        // return object
+        return {
+          chatEmbed,
+        };
+      }
 
       /**
        * in thread

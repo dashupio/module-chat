@@ -2,13 +2,15 @@
   <div if={ !props.item.get('archived') } class={ `card card-sm card-task card-${getColor()}` } onclick={ (e) => onClick(e) } data-id={ props.item.get('_id') } id={ `task-${props.item.get('_id')}` } if={ !loading('backlog') }>
     <div if={ getColor() } class="color-strip" />
     <div if={ hasTags() } class="card-header tags p-2 pb-1 dropdown">
-      <button each={ (tag, i) in getTags() } class={ `btn btn-sm mr-1 btn-${tag.color}` } onclick={ (e) => props.addTag(e, props.item) }>
-        { tag.label }
-      </button>
+      <template each={ (type, a) in getTagTypes() }>
+        <button each={ (tag, i) in getTags(type) } class={ `btn btn-sm mr-1 btn-${tag.color}` } onclick={ (e) => props.addTag(e, props.item, type) }>
+          { tag.label }
+        </button>
 
-      <button class="btn btn-sm btn-outline-primary" id={ `tag-${props.item.get('_id')}` } onclick={ (e) => props.addTag(e, props.item) }>
-        <i class="fa fa-tag" />
-      </button>
+        <button class="btn btn-sm btn-outline-primary" id={ `tag-${props.item.get('_id')}` } onclick={ (e) => props.addTag(e, props.item, type) } data-toggle="tooltip" title={ type.label }>
+          <i class="fa fa-tag" />
+        </button>
+      </template>
     </div>
 
     <div class={ `card-body py-1 px-2${hasTags() ? ' pt-2' : ''}` }>
@@ -16,13 +18,15 @@
     </div>
 
     <div class="card-footer tags p-2 pt-1 dropdown">
-      <button if={ hasUser() } each={ (user, i) in getUsers() } class="btn btn-sm btn-circle mr-1" style={ getAvatar(user) ? `background-image:url(${getAvatar(user)})` : null } data-toggle="tooltip" title={ user.name } onclick={ (e) => props.addUser(e, props.item) }>
-        { getAvatar(user) ? '' : getShortName(user) }
-      </button>
+      <template each={ (type, a) in getUserTypes() }>
+        <button if={ hasUser() } each={ (user, i) in getUsers(type) } class="btn btn-sm btn-circle mr-1" style={ getAvatar(user) ? `background-image:url(${getAvatar(user)})` : null } data-toggle="tooltip" title={ user.name } onclick={ (e) => props.addUser(e, props.item, type) }>
+          { getAvatar(user) ? '' : getShortName(user) }
+        </button>
 
-      <button if={ hasUser() } class="btn btn-sm btn-outline-primary btn-circle" id={ `user-${props.item.get('_id')}` } onclick={ (e) => props.addUser(e, props.item) }>
-        <i class="fa fa-plus" />
-      </button>
+        <button if={ hasUser() } class="btn btn-sm btn-outline-primary btn-circle" id={ `user-${props.item.get('_id')}` } onclick={ (e) => props.addUser(e, props.item, type) } data-toggle="tooltip" title={ type.label }>
+          <i class="fa fa-plus" />
+        </button>
+      </template>
 
       <button class={ `btn btn-sm btn-${props.item.get('_alert.important') && !props.item.get('_alert.all') ? '' : 'outline-primary'}${props.item.get('_alert.important') ? 'primary' : ''}${props.item.get('_alert.all') && !props.item.get('_alert.important') ? 'info' : ''} ml-auto` } id={ `chat-${props.item.get('_id')}` } onclick={ (e) => onClick(e) }>
         <span if={ state.count } class="mr-2">
@@ -110,16 +114,43 @@
        */
       getColor() {
         // get color
-        return this.getTags()[0] ? this.getTags()[0].color : null;
+        return this.getTags(this.getTagTypes()[0])[0] ? this.getTags(this.getTagTypes()[0])[0].color : null;
+      }
+
+      /**
+       * get types
+       */
+      getTagTypes() {
+        // set types
+        let types = (this.props.page.get('data.tag') || []);
+        if (!Array.isArray(types)) types = [types];
+
+        // return fields
+        return types.map((type) => {
+          // return type
+          return (this.props.formFields || []).find((f) => f.uuid === type);
+        });
+      }
+
+      /**
+       * get types
+       */
+      getUserTypes() {
+        // set types
+        let types = (this.props.page.get('data.user') || []);
+        if (!Array.isArray(types)) types = [types];
+
+        // return fields
+        return types.map((type) => {
+          // return type
+          return (this.props.formFields || []).find((f) => f.uuid === type);
+        });
       }
 
       /**
        * get tags
        */
-      getTags() {
-        // get tag values
-        const tagField = (this.props.formFields || []).find((f) => f.uuid === this.props.page.get('data.tag'));
-
+      getTags(tagField) {
         // tag field
         if (!tagField) return [];
 
@@ -145,10 +176,7 @@
       /**
        * get tags
        */
-      getUsers() {
-        // get tag values
-        const userField = (this.props.formFields || []).find((f) => f.uuid === this.props.page.get('data.user')) || {};
-
+      getUsers(userField) {
         // check options
         if (!userField) return [];
 
@@ -186,7 +214,7 @@
        */
       hasTags() {
         // tag uuid
-        return !!this.props.page.get('data.tag');
+        return (this.props.page.get('data.tag') || []).length;
       }
 
       /**
@@ -194,7 +222,7 @@
        */
       hasUser() {
         // tag uuid
-        return !!this.props.page.get('data.user');
+        return (this.props.page.get('data.user') || []).length;
       }
 
       /**

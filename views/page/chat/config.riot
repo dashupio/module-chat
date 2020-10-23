@@ -26,7 +26,7 @@
         <label class="form-label">
           Tag Field
         </label>
-        <eden-select on-change={ (e, val) => onTag(val) } ref={ ref('tag') } placeholder="Select Tag Field" data={ getTag() } />
+        <eden-select on-change={ (e, val) => onTag(val) } ref={ ref('tag') } placeholder="Select Tag Field" data={ getTag() } multiple={ true } />
         <small>
           Selecting a tag field will allow you to tag tasks.
         </small>
@@ -36,7 +36,7 @@
         <label class="form-label">
           User Field
         </label>
-        <eden-select on-change={ (e, val) => onUser(val) } ref={ ref('user') } placeholder="Select User Field" data={ getUser() } />
+        <eden-select on-change={ (e, val) => onUser(val) } ref={ ref('user') } placeholder="Select User Field" data={ getUser() } multiple={ true } />
         <small>
           Selecting a user field will allow you to assign tasks to that user.
         </small>
@@ -164,7 +164,7 @@
         data[type] = val;
         
         // set model
-        this.props.onData('field', data);
+        this.props.data('field', data);
       }
 
       /**
