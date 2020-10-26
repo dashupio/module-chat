@@ -1,10 +1,10 @@
 <chat>
   <div class="d-flex flex-column flex-1">
     <div class="chat-body flex-1">
-      <chat-thread id={ (props.item || props.page).get('_id') } dashup={ props.dashup } />
+      <chat-thread id={ (props.item || props.page).id || (props.item || props.page).get('_id') } dashup={ props.dashup } />
     </div>
 
-    <chat-create if={ props.dashup.can((props.page || props.item), 'submit') } id={ (props.item || props.page).get('_id') } dashup={ props.dashup } scroll-down={ (e) => onScroll(e) } />
+    <chat-create if={ props.dashup.can((props.page || props.item), 'submit') } id={ (props.item || props.page).id || (props.item || props.page).get('_id') } dashup={ props.dashup } scroll-down={ (e) => onScroll(e) } />
   </div>
 
   <script>
