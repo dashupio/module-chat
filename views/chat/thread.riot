@@ -4,7 +4,7 @@
       <i class="h1 fa fa-spinner fa-spin" />
     </div>
     <div if={ !state.loading } each={ (message, i) in state.messages }>
-      <chat-message id={ message.id } message={ message } prev={ state.messages[i - 1] } next={ state.messages[i + 1] } />
+      <chat-message id={ message.id } message={ message } dashup={ props.dashup } prev={ state.messages[i - 1] } next={ state.messages[i + 1] } />
     </div>
   </div>
 
