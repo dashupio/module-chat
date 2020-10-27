@@ -93,7 +93,7 @@
             type  : tag.split(':')[0].trim(),
             text  : val,
             uuid  : uuid(),
-            page  : tag.split(':')[0].trim() === 'page' ? props.dashup.page(tag.split('|')[1].trim()) : null,
+            page  : tag.split(':')[0].trim() === 'page' ? this.props.dashup.page(tag.split('|')[1].trim()) : null,
             title : tag.split(':')[1].split('|')[0].trim(),
           };
 
@@ -115,7 +115,7 @@
           }
           if (tag.type === 'page' && tag.page) {
             // get parent
-            const parent = tag.page.get('parent') && props.dashup.page(tag.page.get('parent'));
+            const parent = tag.page.get('parent') && this.props.dashup.page(tag.page.get('parent'));
 
             // join tags
             text = text.split(tag.text).join(`<a href="/app/${tag.page.get('_id')}" class="badge badge-${tag.page.get('color') || (parent && parent.get('color')) || 'secondary'} badge-tag"><i class="fa-${tag.page.get('icon') || 'pencil fa'}"></i><span class="content">${tag.page.get('name')}</span></a>`);
