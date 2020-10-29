@@ -53,7 +53,7 @@
         if (typeof window === 'undefined') return;
 
         // add event listener
-        eden.socket.on(`messages.${this.props.id}`, this.onData);
+        this.props.dashup.socket.on(`messages.${this.props.id}`, this.onData);
 
         // join chat
         this.joinChat = async () => {
@@ -68,7 +68,7 @@
         };
 
         // reconnect
-        eden.socket.on('connect', this.joinChat);
+        this.props.dashup.socket.on('connect', this.joinChat);
         this.joinChat();
       }
 
@@ -80,8 +80,8 @@
         if (typeof window === 'undefined') return;
 
         // leave
-        eden.socket.off('connect', this.joinChat);
-        eden.socket.off(`chat.${this.props.id}`, this.onData);
+        this.props.dashup.socket.off('connect', this.joinChat);
+        this.props.dashup.socket.off(`chat.${this.props.id}`, this.onData);
       }
 
       /**
