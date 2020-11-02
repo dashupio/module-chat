@@ -2,10 +2,10 @@
   <div class={ `row row-eq-height embed-${get('embed.data.type')}` }>
     <div if={ !props.embed.loading && get('embed.data.images.0.url') } class={ classes({ 'd-flex align-items-center' : true, 'col-md-4' : !props.inMessage || !state.show, 'col-12 mb-2' : state.show && props.inMessage }) }>
       <div class="embed text-center w-100">
-        <div if={ !state.show || expanded.includes(get('embed.data.type')) } class="embed-responsive embed-responsive-16by9">
-          <a href={ get('embed.data.url') } target="_blank" onclick={ (e) => expanded.includes(get('embed.data.type')) ? true : onShow(e) } class="embed-responsive-item" style={ `background-image:url(${get('embed.data.images.0.url')}` } />
+        <div if={ !state.show || expanded.includes(get('embed.data.type')) } class="ratio ratio-16x9">
+          <a href={ get('embed.data.url') } target="_blank" onclick={ (e) => expanded.includes(get('embed.data.type')) ? true : onShow(e) } class="rounded" style={ `background-image:url(${get('embed.data.images.0.url')}` } />
         </div>
-        <raw if={ state.show && !expanded.includes(get('embed.data.type')) } class={ classes({ 'embed-responsive embed-responsive-16by9' : props.embed.data.html.includes('iframe') || props.embed.data.html.includes('video') }) } data={ { 'html' : props.embed.data.html } } />
+        <div is="raw" if={ state.show && !expanded.includes(get('embed.data.type')) } class={ classes({ 'ratio ratio-16x9 rounded' : props.embed.data.html.includes('iframe') || props.embed.data.html.includes('video') }) } data={ { 'html' : props.embed.data.html } } />
       </div>
     </div>
     <div class={ classes({ 'd-flex align-items-center' : true, 'col-md-8' : get('embed.data.images.0.url'), 'col' : !get('embed.data.images.0.url') }) }>
@@ -62,6 +62,8 @@
       onBeforeMount(...args) {
         // expanded
         this.expanded = ['photo'];
+
+        console.log(this.props, this.get('embed.data.type'));
 
         // photo
         this.state.show = this.expanded.includes(this.get('embed.data.type'));
@@ -130,7 +132,7 @@
        */
       get(key) {
         // get
-        return dotProp.get({ ...this.props, ...this.state }, key);
+        return dotProp.get(this.props, key);
       }
 
       /**
@@ -159,4 +161,10 @@
     }
 
   </script>
+
+  <style>
+    .rounded {
+      overflow : hidden;
+    }
+  </style>
 </chat-embed>

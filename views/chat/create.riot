@@ -242,7 +242,7 @@
           type   : 'page',
           struct : 'channel',
         }, 'send', {
-          embeds  : this.embeds,
+          embeds  : this.embeds.map((e) => this.getEmbed(e)),
           subject : this.props.id,
           message : this.$('.chat-control').innerText,
         });

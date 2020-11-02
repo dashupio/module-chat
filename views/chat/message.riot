@@ -15,10 +15,10 @@
       <div class="message-content">
         <raw data={ { html : renderText(get('message.parsed') || get('message.message')) } } />
       </div>
-      <div if={ get('message.embeds.0') } class="mb-2 message-embeds">
-        <div each={ (embed, i) in get('message.embeds') } class="mt-2 card">
+      <div if={ getEmbeds().length } class="mb-2 message-embeds">
+        <div each={ (embed, i) in getEmbeds() } class="mt-2 card">
           <div class="card-body">
-            <chat-embed in-message={ true } embed={ { data : embed } } class="embed-child" />
+            <chat-embed in-message={ true } embed={ embed } class="embed-child" />
           </div>
         </div>
       </div>
@@ -72,6 +72,14 @@
       getDate(date) {
         // from now
         return moment(date).fromNow(true);
+      }
+
+      /**
+       * get embeds
+       */
+      getEmbeds() {
+        // return embeds
+        return (this.get('message.embeds') || []).filter((e) => e && e.data && e.data.type);
       }
 
       /**
