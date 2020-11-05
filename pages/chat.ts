@@ -60,7 +60,7 @@ export default class ChatPage extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['frontend'];
+    return ['Chat'];
   }
 
   /**
@@ -68,6 +68,6 @@ export default class ChatPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Embeddable Chat page';
+    return 'Embeddable chat page';
   }
 }

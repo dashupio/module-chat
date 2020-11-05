@@ -90,7 +90,7 @@ export default class ChannelPage extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['frontend'];
+    return ['Chat'];
   }
 
   /**
@@ -98,7 +98,7 @@ export default class ChannelPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Internal chat channel';
+    return 'Internal chat channel page';
   }
 
   /**
