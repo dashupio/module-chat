@@ -121,6 +121,13 @@
         // listeners
         this.props.page.removeListener('reload', this.safeUpdate);
         this.props.page.removeListener('data.form', this.safeUpdate);
+        
+        // items
+        if (this.state.items && this.state.items.removeListener) {
+          // safe update
+          this.state.items.removeListener('update', this.safeUpdate);
+          this.state.items.deafen();
+        }
       }
 
 
@@ -256,6 +263,7 @@
         if (this.state.items && this.state.items.removeListener) {
           // safe update
           this.state.items.removeListener('update', this.safeUpdate);
+          this.state.items.deafen();
         }
 
         // get model
