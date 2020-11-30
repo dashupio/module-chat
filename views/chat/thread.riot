@@ -4,7 +4,7 @@
       <i class="h1 fa fa-spinner fa-spin" />
     </div>
     <div if={ !state.loading } each={ (message, i) in state.messages }>
-      <chat-message id={ message.id } message={ message } dashup={ props.dashup } prev={ state.messages[i - 1] } next={ state.messages[i + 1] } />
+      <chat-message id={ message.id } subject={ props.id } message={ message } dashup={ props.dashup } prev={ state.messages[i - 1] } next={ state.messages[i + 1] } />
     </div>
   </div>
 
@@ -41,6 +41,7 @@
       onBeforeMount(...args) {
         // on data
         this.onData = this.onData.bind(this);
+        this.onRemove = this.onRemove.bind(this);
 
         // set data
         this.members = new Map();
@@ -54,6 +55,7 @@
 
         // add event listener
         this.props.dashup.socket.on(`messages.${this.props.id}`, this.onData);
+        this.props.dashup.socket.on(`messages.${this.props.id}.remove`, this.onRemove);
 
         // join chat
         this.joinChat = async () => {
@@ -81,7 +83,24 @@
 
         // leave
         this.props.dashup.socket.off('connect', this.joinChat);
-        this.props.dashup.socket.off(`chat.${this.props.id}`, this.onData);
+        this.props.dashup.socket.off(`messages.${this.props.id}`, this.onData);
+        this.props.dashup.socket.off(`messages.${this.props.id}.remove`, this.onRemove);
+      }
+
+      /**
+       * on remove
+       */
+      onRemove(messages) {
+        // loop
+        messages.forEach((message) => {
+          // get found
+          this.messages.delete(message.id);
+        });
+
+        // update
+        this.update({
+          messages : this.getMessages(),
+        });
       }
 
       /**

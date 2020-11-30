@@ -22,6 +22,7 @@ export default class ChannelPage extends Struct {
     this.embedAction = this.embedAction.bind(this);
     this.deafenAction = this.deafenAction.bind(this);
     this.listenAction = this.listenAction.bind(this);
+    this.removeAction = this.removeAction.bind(this);
   }
 
   /**
@@ -67,6 +68,7 @@ export default class ChannelPage extends Struct {
       embed  : this.embedAction,
       deafen : this.deafenAction,
       listen : this.listenAction,
+      remove : this.removeAction,
     };
   }
 
@@ -99,6 +101,24 @@ export default class ChannelPage extends Struct {
   get description() {
     // return description string
     return 'Internal chat channel page';
+  }
+
+  /**
+   * send action
+   *
+   * @param param0 
+   * @param message 
+   * @param embeds 
+   */
+  async removeAction(opts, subject, id) {
+    // create message
+    await this.dashup.connection.rpc(opts, 'message.remove', id);
+
+    // emit to room
+    this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}.remove`, [{ id }]);
+
+    // return message
+    return true;
   }
 
   /**
