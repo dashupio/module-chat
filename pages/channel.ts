@@ -138,6 +138,7 @@ export default class ChannelPage extends Struct {
     });
 
     // emit to room
+    this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, await this.dashup.connection.rpc(opts, 'message.count', subject));
     this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
     this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
 
@@ -151,7 +152,10 @@ export default class ChannelPage extends Struct {
    * @param data 
    * @param subject 
    */
-  async countAction(opts, subject) {
+  countAction(opts, subject) {
+    // listen
+    this.dashup.connection.rpc(opts, 'message.count.subscribe', subject);
+
     // deafen action
     return this.dashup.connection.rpc(opts, 'message.count', subject);
   }
