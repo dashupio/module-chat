@@ -78,12 +78,7 @@ export default class ChannelPage extends Struct {
   get views() {
     // return object of views
     return {
-      chat : 'chat',
-      
-      view     : 'page/channel/view',
-      menu     : 'page/channel/menu',
-      config   : 'page/channel/config',
-      connects : 'page/channel/connects',
+      view : 'page/channel',
     };
   }
 
@@ -128,9 +123,9 @@ export default class ChannelPage extends Struct {
    * @param message 
    * @param embeds 
    */
-  async sendAction(opts, { temp, subject, message, embeds }) {
+  async sendAction(opts, { by, temp, subject, message, embeds }) {
     // create message
-    const actualMessage = await this.dashup.connection.rpc(opts, 'message.update', opts.user, {
+    const actualMessage = await this.dashup.connection.rpc(opts, 'message.update', by || opts.user, {
       temp,
       embeds,
       subject,
