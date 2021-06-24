@@ -133,10 +133,10 @@ export default class ChannelPage extends Struct {
     });
 
     // emit to room
-    this.dashup.connection.rpc(opts, 'alert', { id : subject });
-    this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, await this.dashup.connection.rpc(opts, 'message.count', subject));
-    this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
-    this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
+    await this.dashup.connection.rpc(opts, 'alert', { id : subject.split('.')[0] });
+    await this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, await this.dashup.connection.rpc(opts, 'message.count', subject));
+    await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
+    await this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
 
     // return message
     return actualMessage;
