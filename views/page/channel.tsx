@@ -18,7 +18,9 @@ const ChannelPage = (props = {}) => {
         <Chat dashup={ props.dashup } thread={ props.page.get('_id') }>
           <div className="d-flex flex-column flex-1">
             <div className="flex-1 fit-content">
-              <Chat.Thread />
+              <div className="h-100 w-100 pb-4">
+                <Chat.Thread />
+              </div>
             </div>
             <div className="flex-0">
               <Chat.Input />
