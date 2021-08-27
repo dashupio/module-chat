@@ -15,7 +15,7 @@
     "@babel/preset-env": "^7.12.7",
     "@dashup/core": "^1.2.1",
     "@dashup/eslint-config-dashup": "0.0.1",
-    "@dashup/module": "^2.0.3",
+    "@dashup/module": "^2.0.5",
     "@dashup/ui": "file:../../../modules/dashup_ui",
     "babel-plugin-add-module-exports": "^1.0.4",
     "dot-prop": "^6.0.1",
@@ -25,6 +25,7 @@
     "node-fetch": "^2.6.1",
     "npm": "^7.19.0",
     "perfect-scrollbar": "^1.5.0",
-    "socket.io-client": "^4.1.2"
+    "socket.io-client": "^4.1.2",
+    "url-regex": "^5.0.0"
   }
 }

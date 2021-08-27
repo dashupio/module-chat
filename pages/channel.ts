@@ -1,6 +1,7 @@
 
 // import page interface
 import fetch from 'node-fetch';
+import urlRegex from 'url-regex';
 import { Struct } from '@dashup/module';
 
 /**
@@ -38,7 +39,7 @@ export default class ChannelPage extends Struct {
    */
   get icon() {
     // return page type label
-    return 'fa fa-hashtag';
+    return 'fad fa-hashtag text-success';
   }
 
   /**
@@ -46,7 +47,7 @@ export default class ChannelPage extends Struct {
    */
   get title() {
     // return page type label
-    return 'Channel Page';
+    return 'Chat';
   }
 
   /**
@@ -95,7 +96,7 @@ export default class ChannelPage extends Struct {
    */
   get description() {
     // return description string
-    return 'Internal chat channel page';
+    return 'Chat channels for real time communication';
   }
 
   /**
@@ -123,11 +124,11 @@ export default class ChannelPage extends Struct {
    * @param message 
    * @param embeds 
    */
-  async sendAction(opts, { by, temp, subject, message, embeds }) {
+  async sendAction(opts, { by, temp, subject, message }) {
     // create message
-    const actualMessage = await this.dashup.connection.rpc(opts, 'message.update', by || opts.user, {
+    let actualMessage = await this.dashup.connection.rpc(opts, 'message.update', by || opts.user, {
       temp,
-      embeds,
+      embeds : [],
       subject,
       message,
     });
@@ -137,6 +138,56 @@ export default class ChannelPage extends Struct {
     await this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, await this.dashup.connection.rpc(opts, 'message.count', subject));
     await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
     await this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
+
+    // load embeds
+    const embeds = (await Promise.all((message.match(urlRegex()) || []).map(async (entry) => {
+      // await load
+      const data = await this.embedAction(opts, entry);
+
+      // check adata
+      if (!data || !data.type) return;
+
+      // parsed
+      return {
+        data,
+        url  : entry,
+        type : data.type,
+      };
+    }))).filter((e) => e);
+
+    // check entries
+    if (embeds.length) {
+      // create message
+      actualMessage = await this.dashup.connection.rpc(opts, 'message.update', actualMessage.id, by || opts.user, {
+        temp,
+        embeds,
+        subject,
+        message,
+      });
+
+      // emit again with embeds
+      await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
+    }
+
+    // parse tags
+    Array.from(message.matchAll(/[@#]\[([^\]]+)\]\(([^\)]+)\)/g) || []).map((match) => {
+      // match out
+      const [str, name, id] = match;
+
+      // alert
+      this.dashup.connection.rpc(opts, 'alert', { id : subject.split('.')[0], members : [id], type : 'important', push : {
+        body : message,
+        icon : actualMessage?.by?.avatar ? actualMessage.by.avatar.replace('/storage.googleapis.com', '') : null,
+        data : {
+          url : `https://dashup.io/app/${subject.split('.').join('/')}`,
+        },
+        image   : actualMessage?.by?.avatar ? actualMessage.by.avatar.replace('/storage.googleapis.com', '') : null,
+        badge   : 'https://static.dashup.io/public/assets/images/icon-white.svg',
+        title   : `${actualMessage?.by?.name} has mentioned you in a message`,
+        silent  : false,
+        vibrate : [100, 50, 100]
+      } });
+    });
 
     // return message
     return actualMessage;
@@ -221,7 +272,7 @@ export default class ChannelPage extends Struct {
         data.html = `<iframe class="embed-responsive-item" frameborder="0" scrolling="no" allowfullscreen="true"${data.html.replace(/style="[a-zA-Z0-9\s:;.()\-,]*"/gi, '')}/iframe>`;
       } else if (data.html && data.html.includes('<video')) {
         // set html
-        data.tag = 'video';
+        data.type = 'video';
         data.html = (data.html || '').split('<video')[1].split('/video')[0];
         data.html = `<video ${data.html.replace(/style="[a-zA-Z0-9\s:;.()\-,]*"/gi, '')}/video>`;
       } else if (data.type === 'rich' && data.images.length) {

@@ -15,7 +15,7 @@ const ChannelPage = (props = {}) => {
       <Page.Config show={ config } onHide={ (e) => setConfig(false) } />
       <Page.Menu onConfig={ () => setConfig(true) } presence={ props.presence } onShare={ () => setShare(true) } />
       <Page.Body>
-        <Chat dashup={ props.dashup } thread={ props.page.get('_id') }>
+        <Chat dashup={ props.dashup } thread={ props.page.get('_id') } page={ props.page }>
           <div className="d-flex flex-column flex-1">
             <div className="flex-1 fit-content">
               <div className="h-100 w-100 pb-4">
