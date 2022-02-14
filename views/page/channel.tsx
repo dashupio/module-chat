@@ -10,10 +10,9 @@ const ChannelPage = (props = {}) => {
 
   // return jsx
   return (
-    <Page { ...props } bodyClass="flex-column">
+    <Page { ...props } onConfig={ () => setConfig(true) } onShare={ () => setShare(true) }>
       <Page.Share show={ share } onHide={ (e) => setShare(false) } />
       <Page.Config show={ config } onHide={ (e) => setConfig(false) } />
-      <Page.Menu onConfig={ () => setConfig(true) } presence={ props.presence } onShare={ () => setShare(true) } />
       <Page.Body>
         <Chat dashup={ props.dashup } thread={ props.page.get('_id') } page={ props.page }>
           <Stack flex={ 1 } spacing={ 2 }>

@@ -133,10 +133,16 @@ export default class ChannelPage extends Struct {
       message,
     });
 
+    // ge total
+    const total = await this.dashup.connection.rpc(opts, 'message.count', subject);
+
     // emit to room
     await this.dashup.connection.rpc(opts, 'alert', { id : subject.split('.')[0] });
-    await this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, await this.dashup.connection.rpc(opts, 'message.count', subject));
-    await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
+    await this.dashup.connection.rpc(opts, 'socket.room', subject, `count.${subject}`, total);
+    await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, {
+      data : [actualMessage],
+      total,
+    });
     await this.dashup.connection.event(opts, 'message.sent', subject, actualMessage);
 
     // load embeds
@@ -166,7 +172,10 @@ export default class ChannelPage extends Struct {
       });
 
       // emit again with embeds
-      await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, [actualMessage]);
+      await this.dashup.connection.rpc(opts, 'socket.room', subject, `messages.${subject}`, {
+        data : [actualMessage],
+        total,
+      });
     }
 
     // parse tags
@@ -213,9 +222,9 @@ export default class ChannelPage extends Struct {
    * @param data 
    * @param subject 
    */
-  async listenAction(opts, subject) {
+  async listenAction(opts, { subject, skip, limit }) {
     // listen
-    const messages = await this.dashup.connection.rpc(opts, 'message.query', subject);
+    const messages = await this.dashup.connection.rpc(opts, 'message.query', { subject, skip, limit });
 
     // listen
     this.dashup.connection.rpc(opts, 'message.subscribe', subject);
@@ -243,6 +252,9 @@ export default class ChannelPage extends Struct {
    * @param url 
    */
   async embedAction(opts, url) {
+    // data
+    let data = {};
+
     // try/catch
     try {
       // load from embed.rocks
@@ -253,8 +265,11 @@ export default class ChannelPage extends Struct {
       });
 
       // get json
-      const data = await res.json();
+      data = await res.json();
+    } catch (e) {}
 
+    // try/catch
+    try {
       // author
       data.author = data.oembed ? {
         url  : data.oembed.author_url,
@@ -265,8 +280,15 @@ export default class ChannelPage extends Struct {
         name : data.oembed ? data.oembed.provider_name : data.site,
       };
 
-      // set html
-      if (data.html && data.html.includes('iframe')) {
+      // check type
+      if (url.includes('videodelivery.net')) {
+        // id
+        const id = url.split('/').pop();
+
+        // create embed
+        data.type = 'video';
+        data.html = `<iframe class="embed-responsive-item" src="https://iframe.videodelivery.net/${id}" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" frameborder="0" scrolling="no" allowfullscreen="true"></iframe>`;
+      } else if (data.html && data.html.includes('iframe')) {
         // set html
         data.html = data.html.split('<iframe')[1].split('/iframe')[0];
         data.html = `<iframe class="embed-responsive-item" frameborder="0" scrolling="no" allowfullscreen="true"${data.html.replace(/style="[a-zA-Z0-9\s:;.()\-,]*"/gi, '')}/iframe>`;
